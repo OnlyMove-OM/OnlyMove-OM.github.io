@@ -4,18 +4,21 @@
   <meta charset="UTF-8">
   <title>Python Typing Practice</title>
   <link rel="stylesheet" href="style.css">
+  <!-- 코드 하이라이트 (highlight.js) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 </head>
 <body>
-  <h1>파이썬 타자 연습</h1>
-  
-  <pre id="snippet">로딩 중...</pre>
-  
-  <textarea id="input" placeholder="여기에 입력하세요"></textarea>
-  
+  <h1>🐍 Python Typing Practice</h1>
+
+  <div id="practice-box">
+    <pre><code id="target" class="language-python"></code></pre>
+    <textarea id="input" placeholder="여기에 코드를 입력하세요..."></textarea>
+    <button id="check">제출</button>
+  </div>
+
   <div id="result"></div>
-  
-  <button onclick="loadSnippet()">다시하기</button>
-  
+
   <script src="script.js"></script>
 </body>
 </html>
