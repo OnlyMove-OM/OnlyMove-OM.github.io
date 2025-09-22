@@ -26,7 +26,7 @@ const TOKEN_DICT = {
   "+": "덧셈 연산자"
 };
 
-// 토큰 분석 함수
+// 토큰 분석
 function tokenize(code) {
   const tokens = {};
   const words = code
@@ -52,31 +52,62 @@ async function loadSnippets() {
   const res = await fetch("grammar.json");
   const data = await res.json();
 
-  const snippets = [];
-  for (let i = 0; i < 1000; i++) {
-    const tplObj = data.templates[Math.floor(Math.random() * data.templates.length)];
-    const snippet = tplObj.code
-      .replace("{n}", randInt(2, 10))
-      .replace("{x}", randInt(1, 50))
-      .replace("{y}", randInt(1, 50))
-      .replace("{val}", "abc")
-      .replace("{name}", "Alice");
-    const desc = tplObj.desc
-      .replace("{n}", randInt(2, 10))
-      .replace("{x}", randInt(1, 50))
-      .replace("{y}", randInt(1, 50));
+  const tplObj = data.templates[Math.floor(Math.random() * data.templates.length)];
+  const snippet = tplObj.code
+    .replace("{n}", randInt(2, 10))
+    .replace("{x}", randInt(1, 50))
+    .replace("{y}", randInt(1, 50))
+    .replace("{val}", "abc")
+    .replace("{name}", "Alice");
+  const desc = tplObj.desc
+    .replace("{n}", randInt(2, 10))
+    .replace("{x}", randInt(1, 50))
+    .replace("{y}", randInt(1, 50));
 
-    snippets.push({
-      code: snippet,
-      desc: desc,
-      tokens: tokenize(snippet)
-    });
-  }
-  console.log("✅ 1000개 snippets 생성 완료", snippets);
-  return snippets;
+  return {
+    code: snippet,
+    desc: desc,
+    tokens: tokenize(snippet)
+  };
 }
 
-// 페이지 시작 시 호출
-loadSnippets().then(snippets => {
-  // 👉 여기서 연습 로직에 연결하면 됨
+// UI 동작
+let targetCode = "";
+let startTime = 0;
+
+async function newPractice() {
+  const snippet = await loadSnippets();
+  targetCode = snippet.code;
+
+  const targetEl = document.getElementById("target");
+  targetEl.textContent = targetCode;
+  hljs.highlightElement(targetEl);
+
+  document.getElementById("result").innerHTML = "";
+  document.getElementById("input").value = "";
+
+  startTime = Date.now();
+  return snippet;
+}
+
+document.getElementById("check").addEventListener("click", async () => {
+  const input = document.getElementById("input").value;
+  const endTime = Date.now();
+  const timeTaken = ((endTime - startTime) / 1000).toFixed(2); // 초 단위
+
+  let resultEl = document.getElementById("result");
+
+  if (input.trim() === targetCode.trim()) {
+    resultEl.innerHTML = `
+      ✅ 정답! <br>
+      ⏱️ 걸린 시간: ${timeTaken}초
+    `;
+  } else {
+    resultEl.innerHTML = `
+      ❌ 오타 발생! 다시 시도하세요.
+    `;
+  }
 });
+
+// 시작 시 문제 로드
+newPractice();
