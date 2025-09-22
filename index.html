@@ -3,8 +3,48 @@
 <head>
   <meta charset="UTF-8">
   <title>Python Typing Practice</title>
-  <link rel="stylesheet" href="style.css">
-  <!-- 코드 하이라이트 (highlight.js) -->
+  <style>
+    body {
+      font-family: monospace;
+      background: #f4f4f4;
+      padding: 20px;
+    }
+    h1 { text-align: center; }
+    #practice-box {
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    #target {
+      background: #272822;
+      color: #f8f8f2;
+      padding: 15px;
+      border-radius: 5px;
+      display: block;
+      white-space: pre-wrap;
+    }
+    #input {
+      width: 100%;
+      height: 100px;
+      margin-top: 10px;
+      font-family: monospace;
+      font-size: 14px;
+    }
+    #check {
+      margin-top: 10px;
+      padding: 8px 12px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    #result {
+      margin-top: 20px;
+      padding: 10px;
+      background: #e0ffe0;
+      border-radius: 5px;
+    }
+  </style>
+  <!-- 코드 하이라이트 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 </head>
@@ -19,6 +59,127 @@
 
   <div id="result"></div>
 
-  <script src="script.js"></script>
+  <script>
+    // JSON 데이터 직접 내장
+    const GRAMMAR_DATA = {
+      "templates": [
+        { "code": "for i in range({n}):\\n    print(i)", "desc": "{n}번 반복하여 숫자 출력" },
+        { "code": "def add(a, b):\\n    return a + b", "desc": "두 수를 더하는 함수" },
+        { "code": "if {x} > {y}:\\n    print('크다')\\nelse:\\n    print('작거나 같다')", "desc": "{x}와 {y} 비교 조건문" },
+        { "code": "numbers = [x**2 for x in range({n})]", "desc": "제곱수를 담은 리스트 생성" },
+        { "code": "try:\\n    result = int('{val}')\\nexcept ValueError:\\n    print('Error!')", "desc": "문자열을 정수로 변환 시도" },
+        { "code": "with open('file.txt', 'w') as f:\\n    f.write('Hello')", "desc": "파일에 문자열 쓰기" },
+        { "code": "class Person:\\n    def __init__(self, name):\\n        self.name = name", "desc": "클래스 정의 예제" },
+        { "code": "print('Hello, {}'.format('{name}'))", "desc": "format()을 이용한 문자열 포매팅" }
+      ]
+    };
+
+    // 키워드 설명 사전
+    const TOKEN_DICT = {
+      "for": "반복문 시작 키워드",
+      "in": "멤버십/반복 연산자",
+      "if": "조건문 시작 키워드",
+      "else": "조건이 거짓일 때 실행되는 블록",
+      "def": "함수 정의 키워드",
+      "class": "클래스 정의 키워드",
+      "try": "예외 처리 블록 시작",
+      "except": "예외 발생 시 실행 블록",
+      "with": "컨텍스트 관리 블록",
+      "as": "별칭 지정 키워드",
+      "return": "함수 결과 반환 키워드",
+      "print": "출력 함수",
+      "range": "연속된 정수 시퀀스 생성 함수",
+      "int": "정수형 변환 함수",
+      "open": "파일 열기 함수",
+      "(": "괄호 시작",
+      ")": "괄호 끝",
+      "[": "리스트 시작",
+      "]": "리스트 끝",
+      "{": "딕셔너리/집합 시작",
+      "}": "딕셔너리/집합 끝",
+      ":": "블록 시작 구분자",
+      "=": "값 할당 연산자",
+      "+": "덧셈 연산자"
+    };
+
+    function tokenize(code) {
+      const tokens = {};
+      const words = code.replace(/\\n/g, " ")
+        .replace(/([\\(\\)\\[\\]\\{\\}\\:\\=])/g, " $1 ")
+        .split(/\\s+/);
+      words.forEach(word => {
+        if (TOKEN_DICT[word]) {
+          tokens[word] = TOKEN_DICT[word];
+        }
+      });
+      return tokens;
+    }
+
+    function randInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function loadSnippets() {
+      const tplObj = GRAMMAR_DATA.templates[Math.floor(Math.random() * GRAMMAR_DATA.templates.length)];
+      const snippet = tplObj.code
+        .replace("{n}", randInt(2, 10))
+        .replace("{x}", randInt(1, 50))
+        .replace("{y}", randInt(1, 50))
+        .replace("{val}", "abc")
+        .replace("{name}", "Alice");
+      const desc = tplObj.desc
+        .replace("{n}", randInt(2, 10))
+        .replace("{x}", randInt(1, 50))
+        .replace("{y}", randInt(1, 50));
+      return { code: snippet, desc: desc, tokens: tokenize(snippet) };
+    }
+
+    let targetCode = "";
+    let startTime = 0;
+    let currentDesc = "";
+    let currentTokens = {};
+
+    function newPractice() {
+      const snippet = loadSnippets();
+      targetCode = snippet.code;
+      currentDesc = snippet.desc;
+      currentTokens = snippet.tokens;
+
+      const targetEl = document.getElementById("target");
+      targetEl.textContent = targetCode;
+      hljs.highlightElement(targetEl);
+
+      document.getElementById("result").innerHTML = "";
+      document.getElementById("input").value = "";
+
+      startTime = Date.now();
+    }
+
+    document.getElementById("check").addEventListener("click", () => {
+      const input = document.getElementById("input").value;
+      const endTime = Date.now();
+      const timeTaken = ((endTime - startTime) / 1000).toFixed(2);
+
+      let resultEl = document.getElementById("result");
+
+      if (input.trim() === targetCode.trim()) {
+        let tokenDescHtml = Object.entries(currentTokens)
+          .map(([tok, desc]) => `<li><b>${tok}</b>: ${desc}</li>`)
+          .join("");
+
+        resultEl.innerHTML = `
+          ✅ 정답! <br>
+          ⏱️ 걸린 시간: ${timeTaken}초 <br><br>
+          📖 설명: ${currentDesc}<br>
+          🔑 토큰 해설: <ul>${tokenDescHtml}</ul>
+        `;
+      } else {
+        resultEl.innerHTML = `❌ 오타 발생! 다시 시도하세요.`;
+      }
+    });
+
+    // 초기 실행
+    newPractice();
+  </script>
 </body>
 </html>
