@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>Python Typing Practice</title>
+  <title>🐍 Python Typing Practice</title>
   <style>
     body {
       font-family: monospace;
@@ -44,6 +44,7 @@
       padding: 10px;
       background: #e0ffe0;
       border-radius: 5px;
+      white-space: pre-wrap;
     }
   </style>
   <!-- 코드 하이라이트 -->
@@ -62,7 +63,7 @@
   <div id="result"></div>
 
   <script>
-    // JSON 데이터 직접 내장
+    // 연습 예제 데이터
     const GRAMMAR_DATA = {
       "templates": [
         { "code": "for i in range({n}):\\n    print(i)", "desc": "{n}번 반복하여 숫자 출력" },
@@ -76,7 +77,7 @@
       ]
     };
 
-    // 키워드 설명 사전
+    // 토큰 설명 사전
     const TOKEN_DICT = {
       "for": "반복문 시작 키워드",
       "in": "멤버십/반복 연산자",
@@ -101,14 +102,24 @@
       "}": "딕셔너리/집합 끝",
       ":": "블록 시작 구분자",
       "=": "값 할당 연산자",
-      "+": "덧셈 연산자"
+      "+": "덧셈 연산자",
+      "**": "제곱 연산자",
+      "i": "변수 (사용자 정의)",
+      "x": "변수 (사용자 정의)",
+      "y": "변수 (사용자 정의)",
+      "a": "변수 (사용자 정의)",
+      "b": "변수 (사용자 정의)",
+      "name": "변수 (사용자 정의)",
+      "'abc'": "문자열 리터럴",
+      "'Hello'": "문자열 리터럴"
     };
 
+    // 코드 토큰화
     function tokenize(code) {
       const tokens = {};
-      const words = code.replace(/\\n/g, " ")
-        .replace(/([\\(\\)\\[\\]\\{\\}\\:\\=])/g, " $1 ")
-        .split(/\\s+/);
+      const words = code.replace(/\n/g, " ")   // ← 실제 줄바꿈 잡기
+        .replace(/([\(\)\[\]\{\}\:\=\+\*])/g, " $1 ")
+        .split(/\s+/);
       words.forEach(word => {
         if (TOKEN_DICT[word]) {
           tokens[word] = TOKEN_DICT[word];
@@ -117,10 +128,12 @@
       return tokens;
     }
 
+    // 랜덤 정수
     function randInt(min, max) {
       return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 
+    // 문제 불러오기
     function loadSnippets() {
       const tplObj = GRAMMAR_DATA.templates[Math.floor(Math.random() * GRAMMAR_DATA.templates.length)];
       const snippet = tplObj.code
@@ -133,7 +146,7 @@
         .replace("{n}", randInt(2, 10))
         .replace("{x}", randInt(1, 50))
         .replace("{y}", randInt(1, 50));
-      return { code: snippet, desc: desc, tokens: tokenize(snippet) };
+      return { code: snippet.replace(/\\n/g, "\n"), desc: desc, tokens: tokenize(snippet) };
     }
 
     let targetCode = "";
@@ -141,9 +154,10 @@
     let currentDesc = "";
     let currentTokens = {};
 
+    // 새 문제
     function newPractice() {
       const snippet = loadSnippets();
-      targetCode = snippet.code.replace(/\\n/g, "\n"); // ← 줄바꿈 처리
+      targetCode = snippet.code;
       currentDesc = snippet.desc;
       currentTokens = snippet.tokens;
 
@@ -157,6 +171,7 @@
       startTime = Date.now();
     }
 
+    // 제출 버튼
     document.getElementById("check").addEventListener("click", () => {
       const input = document.getElementById("input").value;
       const endTime = Date.now();
@@ -164,19 +179,21 @@
 
       let resultEl = document.getElementById("result");
 
-      if (input.trim() === targetCode.trim()) {
+      if (input === targetCode) {   // 줄바꿈/공백까지 동일해야 정답
         let tokenDescHtml = Object.entries(currentTokens)
-          .map(([tok, desc]) => `<li><b>${tok}</b>: ${desc}</li>`)
-          .join("");
+          .map(([tok, desc]) => `- ${tok}: ${desc}`)
+          .join("\n");
 
-        resultEl.innerHTML = `
-          ✅ 정답! <br>
-          ⏱️ 걸린 시간: ${timeTaken}초 <br><br>
-          📖 설명: ${currentDesc}<br>
-          🔑 토큰 해설: <ul>${tokenDescHtml}</ul>
-        `;
+        resultEl.textContent = 
+`✅ 정답!
+⏱️ 걸린 시간: ${timeTaken}초
+
+📖 설명: ${currentDesc}
+
+🔑 토큰 해설:
+${tokenDescHtml}`;
       } else {
-        resultEl.innerHTML = `❌ 오타 발생! 다시 시도하세요.`;
+        resultEl.textContent = `❌ 오타 발생! 다시 시도하세요.`;
       }
     });
 
@@ -186,7 +203,7 @@
       const start = this.selectionStart;
       const end = this.selectionEnd;
 
-      // 탭 처리
+      // 탭 → 4칸
       if (e.key === "Tab") {
         e.preventDefault();
         this.value = this.value.substring(0, start) + "    " + this.value.substring(end);
@@ -209,7 +226,7 @@
       }
     });
 
-    // 초기 실행
+    // 시작
     newPractice();
   </script>
 </body>
