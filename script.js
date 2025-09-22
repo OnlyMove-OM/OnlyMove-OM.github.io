@@ -1,5 +1,5 @@
 let startTime = null;
-let currentSnippet = "";
+let currentSnippet = null;
 
 async function loadSnippet() {
   const response = await fetch("snippets.json");
@@ -9,7 +9,7 @@ async function loadSnippet() {
   const randomIndex = Math.floor(Math.random() * snippets.length);
   currentSnippet = snippets[randomIndex];
 
-  document.getElementById("snippet").textContent = currentSnippet;
+  document.getElementById("snippet").textContent = currentSnippet.code;
   document.getElementById("input").value = "";
   document.getElementById("result").textContent = "";
 
@@ -19,22 +19,25 @@ async function loadSnippet() {
 function checkTyping() {
   const input = document.getElementById("input").value;
 
-  // 시간 측정 시작
-  if (!startTime) startTime = Date.now();
+  if (!startTime) {
+    alert("먼저 입력을 시작해야 합니다!");
+    return;
+  }
 
   // 정확도 계산
   let correct = 0;
   for (let i = 0; i < input.length; i++) {
-    if (input[i] === currentSnippet[i]) correct++;
+    if (input[i] === currentSnippet.code[i]) correct++;
   }
-  const accuracy = ((correct / currentSnippet.length) * 100).toFixed(2);
+  const accuracy = ((correct / currentSnippet.code.length) * 100).toFixed(2);
 
-  // 속도 (WPM) 계산
-  const timeTaken = (Date.now() - startTime) / 60000; // 분 단위
-  const wpm = ((input.length / 5) / timeTaken).toFixed(2);
+  // 시간 (초)
+  const timeTaken = ((Date.now() - startTime) / 1000).toFixed(2);
 
-  document.getElementById("result").textContent =
-    `속도: ${wpm} WPM | 정확도: ${accuracy}%`;
+  document.getElementById("result").innerHTML =
+    `걸린 시간: ${timeTaken}초<br>` +
+    `정확도: ${accuracy}%<br>` +
+    `<strong>설명:</strong> ${currentSnippet.desc}`;
 }
 
 // 입력창 이벤트
@@ -47,6 +50,9 @@ inputBox.addEventListener("keydown", function(e) {
     checkTyping();
     return;
   }
+
+  // 입력 시작 시간 기록
+  if (!startTime) startTime = Date.now();
 
   // 괄호/따옴표 자동완성
   const start = this.selectionStart;
