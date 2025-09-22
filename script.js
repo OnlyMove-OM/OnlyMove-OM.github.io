@@ -11,7 +11,7 @@ async function loadSnippet() {
 
   document.getElementById("snippet").textContent = currentSnippet.code;
   document.getElementById("input").value = "";
-  document.getElementById("result").textContent = "";
+  document.getElementById("result").innerHTML = "";
 
   startTime = null;
 }
@@ -34,10 +34,26 @@ function checkTyping() {
   // 시간 (초)
   const timeTaken = ((Date.now() - startTime) / 1000).toFixed(2);
 
+  // 결과 문자열 (색상 강조)
+  let highlighted = "";
+  for (let i = 0; i < currentSnippet.code.length; i++) {
+    const char = currentSnippet.code[i];
+    if (i < input.length) {
+      if (input[i] === char) {
+        highlighted += `<span style="color:green">${char}</span>`;
+      } else {
+        highlighted += `<span style="color:red">${char}</span>`;
+      }
+    } else {
+      highlighted += char; // 아직 안 친 부분
+    }
+  }
+
   document.getElementById("result").innerHTML =
     `걸린 시간: ${timeTaken}초<br>` +
     `정확도: ${accuracy}%<br>` +
-    `<strong>설명:</strong> ${currentSnippet.desc}`;
+    `<strong>설명:</strong> ${currentSnippet.desc}<br><br>` +
+    `<strong>정답 코드:</strong><br><pre>${highlighted}</pre>`;
 }
 
 // 입력창 이벤트
