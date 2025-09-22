@@ -16,6 +16,22 @@ async function loadSnippet() {
   startTime = null;
 }
 
+function highlightComparison(textA, textB) {
+  // textA = 기준 문자열, textB = 비교 문자열
+  let result = "";
+  for (let i = 0; i < textA.length; i++) {
+    const charA = textA[i] || "";
+    const charB = textB[i] || "";
+
+    if (charA === charB) {
+      result += `<span style="color:green">${charB}</span>`;
+    } else if (charB) {
+      result += `<span style="color:red">${charB}</span>`;
+    }
+  }
+  return result;
+}
+
 function checkTyping() {
   const input = document.getElementById("input").value;
 
@@ -34,26 +50,16 @@ function checkTyping() {
   // 시간 (초)
   const timeTaken = ((Date.now() - startTime) / 1000).toFixed(2);
 
-  // 결과 문자열 (색상 강조)
-  let highlighted = "";
-  for (let i = 0; i < currentSnippet.code.length; i++) {
-    const char = currentSnippet.code[i];
-    if (i < input.length) {
-      if (input[i] === char) {
-        highlighted += `<span style="color:green">${char}</span>`;
-      } else {
-        highlighted += `<span style="color:red">${char}</span>`;
-      }
-    } else {
-      highlighted += char; // 아직 안 친 부분
-    }
-  }
+  // 하이라이트된 결과
+  const highlightedCorrect = highlightComparison(currentSnippet.code, input);
+  const highlightedInput = highlightComparison(input, currentSnippet.code);
 
   document.getElementById("result").innerHTML =
     `걸린 시간: ${timeTaken}초<br>` +
     `정확도: ${accuracy}%<br>` +
     `<strong>설명:</strong> ${currentSnippet.desc}<br><br>` +
-    `<strong>정답 코드:</strong><br><pre>${highlighted}</pre>`;
+    `<strong>정답 코드:</strong><br><pre>${highlightedCorrect}</pre><br>` +
+    `<strong>내 입력:</strong><br><pre>${highlightedInput}</pre>`;
 }
 
 // 입력창 이벤트
