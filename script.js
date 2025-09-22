@@ -1,99 +1,82 @@
-let startTime = null;
-let currentSnippet = null;
+// 키워드 설명 사전
+const TOKEN_DICT = {
+  "for": "반복문 시작 키워드",
+  "in": "멤버십/반복 연산자",
+  "if": "조건문 시작 키워드",
+  "else": "조건이 거짓일 때 실행되는 블록",
+  "def": "함수 정의 키워드",
+  "class": "클래스 정의 키워드",
+  "try": "예외 처리 블록 시작",
+  "except": "예외 발생 시 실행 블록",
+  "with": "컨텍스트 관리 블록",
+  "as": "별칭 지정 키워드",
+  "return": "함수 결과 반환 키워드",
+  "print": "출력 함수",
+  "range": "연속된 정수 시퀀스 생성 함수",
+  "int": "정수형 변환 함수",
+  "open": "파일 열기 함수",
+  "(": "괄호 시작",
+  ")": "괄호 끝",
+  "[": "리스트 시작",
+  "]": "리스트 끝",
+  "{": "딕셔너리/집합 시작",
+  "}": "딕셔너리/집합 끝",
+  ":": "블록 시작 구분자",
+  "=": "값 할당 연산자",
+  "+": "덧셈 연산자"
+};
 
-async function loadSnippet() {
-  const response = await fetch("snippets.json");
-  const snippets = await response.json();
+// 토큰 분석 함수
+function tokenize(code) {
+  const tokens = {};
+  const words = code
+    .replace(/\n/g, " ")
+    .replace(/([\(\)\[\]\{\}\:\=])/g, " $1 ")
+    .split(/\s+/);
 
-  // 랜덤 선택
-  const randomIndex = Math.floor(Math.random() * snippets.length);
-  currentSnippet = snippets[randomIndex];
-
-  document.getElementById("snippet").textContent = currentSnippet.code;
-  document.getElementById("input").value = "";
-  document.getElementById("result").innerHTML = "";
-
-  startTime = null;
-}
-
-function highlightComparison(textA, textB) {
-  // textA = 기준 문자열, textB = 비교 문자열
-  let result = "";
-  for (let i = 0; i < textA.length; i++) {
-    const charA = textA[i] || "";
-    const charB = textB[i] || "";
-
-    if (charA === charB) {
-      result += `<span style="color:green">${charB}</span>`;
-    } else if (charB) {
-      result += `<span style="color:red">${charB}</span>`;
+  words.forEach(word => {
+    if (TOKEN_DICT[word]) {
+      tokens[word] = TOKEN_DICT[word];
     }
-  }
-  return result;
+  });
+  return tokens;
 }
 
-function checkTyping() {
-  const input = document.getElementById("input").value;
-
-  if (!startTime) {
-    alert("먼저 입력을 시작해야 합니다!");
-    return;
-  }
-
-  // 정확도 계산
-  let correct = 0;
-  for (let i = 0; i < input.length; i++) {
-    if (input[i] === currentSnippet.code[i]) correct++;
-  }
-  const accuracy = ((correct / currentSnippet.code.length) * 100).toFixed(2);
-
-  // 시간 (초)
-  const timeTaken = ((Date.now() - startTime) / 1000).toFixed(2);
-
-  // 하이라이트된 결과
-  const highlightedCorrect = highlightComparison(currentSnippet.code, input);
-  const highlightedInput = highlightComparison(input, currentSnippet.code);
-
-  document.getElementById("result").innerHTML =
-    `걸린 시간: ${timeTaken}초<br>` +
-    `정확도: ${accuracy}%<br>` +
-    `<strong>설명:</strong> ${currentSnippet.desc}<br><br>` +
-    `<strong>정답 코드:</strong><br><pre>${highlightedCorrect}</pre><br>` +
-    `<strong>내 입력:</strong><br><pre>${highlightedInput}</pre>`;
+// 랜덤 정수
+function randInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-// 입력창 이벤트
-const inputBox = document.getElementById("input");
+// grammar.json 불러오기
+async function loadSnippets() {
+  const res = await fetch("grammar.json");
+  const data = await res.json();
 
-inputBox.addEventListener("keydown", function(e) {
-  // 엔터 → 오타 체크
-  if (e.key === "Enter") {
-    e.preventDefault();
-    checkTyping();
-    return;
+  const snippets = [];
+  for (let i = 0; i < 1000; i++) {
+    const tplObj = data.templates[Math.floor(Math.random() * data.templates.length)];
+    const snippet = tplObj.code
+      .replace("{n}", randInt(2, 10))
+      .replace("{x}", randInt(1, 50))
+      .replace("{y}", randInt(1, 50))
+      .replace("{val}", "abc")
+      .replace("{name}", "Alice");
+    const desc = tplObj.desc
+      .replace("{n}", randInt(2, 10))
+      .replace("{x}", randInt(1, 50))
+      .replace("{y}", randInt(1, 50));
+
+    snippets.push({
+      code: snippet,
+      desc: desc,
+      tokens: tokenize(snippet)
+    });
   }
+  console.log("✅ 1000개 snippets 생성 완료", snippets);
+  return snippets;
+}
 
-  // 입력 시작 시간 기록
-  if (!startTime) startTime = Date.now();
-
-  // 괄호/따옴표 자동완성
-  const start = this.selectionStart;
-  const end = this.selectionEnd;
-
-  let insertChar = "";
-  if (e.key === "(") insertChar = ")";
-  else if (e.key === "[") insertChar = "]";
-  else if (e.key === "{") insertChar = "}";
-  else if (e.key === "'") insertChar = "'";
-  else if (e.key === '"') insertChar = '"';
-
-  if (insertChar) {
-    e.preventDefault();
-    const value = this.value;
-    this.value = value.slice(0, start) + e.key + insertChar + value.slice(end);
-    this.selectionStart = this.selectionEnd = start + 1;
-  }
+// 페이지 시작 시 호출
+loadSnippets().then(snippets => {
+  // 👉 여기서 연습 로직에 연결하면 됨
 });
-
-// 첫 로딩 시 구문 불러오기
-window.onload = loadSnippet;
