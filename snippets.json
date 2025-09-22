@@ -1,0 +1,7 @@
+[
+  "for i in range(5):\n    print(i)",
+  "def greet(name):\n    return f'Hello, {name}!'",
+  "numbers = [x**2 for x in range(10)]",
+  "try:\n    x = int('abc')\nexcept ValueError:\n    print('Error!')",
+  "with open('file.txt', 'r') as f:\n    data = f.read()"
+]
