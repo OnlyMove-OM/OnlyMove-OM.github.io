@@ -1,256 +1,306 @@
-<!DOCTYPE html>
+<!doctype html>
+
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <title>🐍 Python Typing Practice</title>
-  <style>
-    body {
-      font-family: monospace;
-      background: #f4f4f4;
-      padding: 20px;
-    }
-    h1 { text-align: center; }
-    #practice-box {
-      background: #fff;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-    #target {
-      background: #272822;
-      color: #f8f8f2;
-      padding: 15px;
-      border-radius: 5px;
-      display: block;
-      white-space: pre-wrap;
-    }
-    #input {
-      width: 100%;
-      height: 120px;
-      margin-top: 10px;
-      font-family: monospace;
-      font-size: 14px;
-      padding: 5px;
-      box-sizing: border-box;
-    }
-    #check {
-      margin-top: 10px;
-      padding: 8px 12px;
-      font-size: 14px;
-      cursor: pointer;
-    }
-    #result {
-      margin-top: 20px;
-      padding: 10px;
-      background: #e0ffe0;
-      border-radius: 5px;
-      white-space: pre-wrap;
-    }
-  </style>
-  <!-- 코드 하이라이트 -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>코딩 타자연습 (한컴 스타일) — single file</title>
+<style>
+:root{--bg:#0f1724;--panel:#0b1220;--accent:#7c3aed;--muted:#94a3b8;--ok:#16a34a;--err:#ef4444}
+*{box-sizing:border-box;font-family:Inter, Roboto, Noto Sans KR, 'Segoe UI', system-ui}
+html,body{height:100%;margin:0;background:linear-gradient(180deg,#07142a 0%, #081226 100%);color:#e6eef8}
+.container{max-width:1100px;margin:28px auto;padding:20px}
+.header{display:flex;gap:12px;align-items:center;margin-bottom:14px}
+.logo{background:var(--panel);padding:10px 14px;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,.6)}
+.controls{display:flex;gap:8px;align-items:center}
+.select, .btn, .file{background:var(--panel);border:1px solid rgba(255,255,255,.04);padding:8px 10px;border-radius:8px;color:inherit}
+.btn{cursor:pointer}
+.row{display:flex;gap:12px}
+.column{flex:1}
+.panel{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.03));padding:14px;border-radius:12px;box-shadow:0 8px 24px rgba(2,6,23,.6);border:1px solid rgba(255,255,255,0.03)}
+.toolbar{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.codeArea{height:360px;overflow:auto;padding:14px;background:#01040a;border-radius:8px;font-family:'Source Code Pro', ui-monospace, SFMono-Regular, Menlo, Monaco, 'Roboto Mono', monospace;font-size:14px;line-height:1.6;color:#dbeafe}
+.codeLine{white-space:pre-wrap}
+.char{opacity:.9}
+.char.correct{color:var(--muted)}
+.char.ok{color:var(--ok)}
+.char.err{color:var(--err);background:rgba(239,68,68,0.06);border-radius:3px}
+.cursor{display:inline-block;width:2px;background:var(--accent);height:1.2em;vertical-align:bottom;animation:blink 1s steps(2,end) infinite}
+@keyframes blink{50%{opacity:0}}
+.stats{display:flex;gap:12px;align-items:center}
+.stat{background:rgba(255,255,255,0.02);padding:8px 10px;border-radius:8px;font-size:13px}
+.footer{margin-top:12px;color:var(--muted);font-size:13px}
+.inputCapture{position:fixed;left:-9999px;opacity:0}
+.small{font-size:12px;color:var(--muted)}
+.keyword{color:#60a5fa}
+.string{color:#fbbf24}
+.comment{color:#94a3b8}
+</style>
 </head>
 <body>
-  <h1>🐍 Python Typing Practice</h1>
+<div class="container">
+  <div class="header">
+    <div class="logo"><strong>코딩 타자연습</strong> — 한컴 스타일 (single HTML)</div>
+    <div class="controls">
+      <select id="sampleSelect" class="select">
+        <option value="sample_js">JavaScript: forEach / async</option>
+        <option value="sample_py">Python: generator / listcomp</option>
+        <option value="sample_cpp">C++: class + iostream</option>
+        <option value="custom">사용자 지문 붙여넣기 / 업로드</option>
+      </select>
+      <button id="startBtn" class="btn">시작</button>
+      <button id="resetBtn" class="btn">초기화</button>
+      <input id="fileInput" class="file" type="file" accept=".txt,.py,.js,.cpp,.c,.java" />
+    </div>
+  </div>  <div class="row">
+    <div class="column panel">
+      <div class="toolbar">
+        <div class="small">지문</div>
+        <div style="flex:1"></div>
+        <div class="small">언어: <span id="langLabel">JS</span></div>
+      </div>
+      <div id="codeView" class="codeArea" tabindex="0"></div>
+      <textarea id="hiddenInput" class="inputCapture" autofocus></textarea>
+    </div>
+    <div style="width:300px" class="panel">
+      <div class="stats">
+        <div class="stat">시간: <span id="time">0</span>s</div>
+        <div class="stat">타수(CPM): <span id="cpm">0</span></div>
+        <div class="stat">정확도: <span id="acc">100%</span></div>
+      </div>
+      <div style="margin-top:12px">
+        <div class="small">오타 상위</div>
+        <ul id="mistakes" class="small"></ul>
+      </div>
+      <div style="margin-top:12px">
+        <div class="small">설정</div>
+        <label class="small"><input type="checkbox" id="showHighlight" checked/> 문법 하이라이트</label><br>
+        <label class="small"><input type="checkbox" id="countTabs"/> 탭을 4칸으로 계산</label>
+      </div>
+      <div style="margin-top:12px">
+        <div class="small">사용자 지문</div>
+        <textarea id="customText" rows="6" style="width:100%;margin-top:6px;background:#020617;border-radius:6px;padding:8px;color:#dbeafe"></textarea>
+      </div>
+    </div>
+  </div>  <div class="footer">사용법: 지문 선택 → 시작 버튼 → 포커스가 자동으로 숨은 입력으로 이동합니다. 탭/스페이스/개행도 연습됩니다. 파일 업로드는 .txt/.py/.js 등 지원.</div>
+</div><script>
+// --- sample texts ---
+const SAMPLES = {
+  sample_js: `// async fetch example\nasync function fetchAll(urls) {\n  const results = []\n  for (const url of urls) {\n    try {\n      const res = await fetch(url);\n      const txt = await res.text();\n      results.push(txt);\n    } catch (e) {\n      console.error('fetch failed', e);\n      results.push(null);\n    }\n  }\n  return results;\n}\n\n[1,2,3].forEach(n => console.log(n));\n`,
+  sample_py: `# generator & list comprehension\ndef primes(n):\n    D = {}\n    q = 2\n    while q <= n:\n        if q not in D:\n            yield q\n            D[q*q] = [q]\n        else:\n            for p in D[q]:\n                D.setdefault(p+q,[]).append(p)\n            del D[q]\n        q += 1\n\nprint([p for p in primes(30)])\n`,
+  sample_cpp: `#include <iostream>\nusing namespace std;\nclass Point {\npublic:\n    int x, y;\n    Point(int x_, int y_): x(x_), y(y_) {}\n    void print(){ cout << "(" << x << ", " << y << ")\n"; }\n};\nint main(){\n    Point p(3,4);\n    p.print();\n    return 0;\n}\n`
+};
 
-  <div id="practice-box">
-    <pre><code id="target" class="language-python"></code></pre>
-    <textarea id="input" placeholder="여기에 코드를 입력하세요..."></textarea>
-    <button id="check">제출</button>
-  </div>
+// --- state ---
+let target = '';
+let chars = []; // array of {ch, span, status}
+let pos = 0;
+let running = false;
+let startTime = null;
+let timerInterval = null;
+let mistakes = {};
+let lang = 'JS';
 
-  <div id="result"></div>
+const codeView = document.getElementById('codeView');
+const hiddenInput = document.getElementById('hiddenInput');
+const startBtn = document.getElementById('startBtn');
+const resetBtn = document.getElementById('resetBtn');
+const sampleSelect = document.getElementById('sampleSelect');
+const customText = document.getElementById('customText');
+const fileInput = document.getElementById('fileInput');
+const timeEl = document.getElementById('time');
+const cpmEl = document.getElementById('cpm');
+const accEl = document.getElementById('acc');
+const mistakesEl = document.getElementById('mistakes');
+const langLabel = document.getElementById('langLabel');
+const showHighlight = document.getElementById('showHighlight');
+const countTabs = document.getElementById('countTabs');
 
-  <script>
-    // 예제 데이터
-    const GRAMMAR_DATA = {
-      "templates": [
-        { "code": "for i in range({n}):\\n    print(i)", "desc": "{n}번 반복하여 숫자 출력" },
-        { "code": "def add(a, b):\\n    return a + b", "desc": "두 수를 더하는 함수" },
-        { "code": "if {x} > {y}:\\n    print('크다')\\nelse:\\n    print('작거나 같다')", "desc": "{x}와 {y} 비교 조건문" },
-        { "code": "numbers = [x**2 for x in range({n})]", "desc": "제곱수를 담은 리스트 생성" },
-        { "code": "try:\\n    result = int('{val}')\\nexcept ValueError:\\n    print('Error!')", "desc": "문자열을 정수로 변환 시도" },
-        { "code": "with open('file.txt', 'w') as f:\\n    f.write('Hello')", "desc": "파일에 문자열 쓰기" },
-        { "code": "class Person:\\n    def __init__(self, name):\\n        self.name = name", "desc": "클래스 정의 예제" },
-        { "code": "print('Hello, {}'.format('{name}'))", "desc": "format()을 이용한 문자열 포매팅" }
-      ]
-    };
+function loadSample(key){
+  if(key === 'custom'){
+    target = customText.value || '// 사용자 지문을 붙여넣고 시작하세요.\n';
+  } else {
+    target = SAMPLES[key] || '';
+  }
+  lang = key.includes('js') ? 'JS' : key.includes('py') ? 'PY' : key.includes('cpp') ? 'CPP' : 'TXT';
+  langLabel.textContent = lang;
+  renderTarget();
+}
 
-    // 토큰 설명 사전
-    const TOKEN_DICT = {
-      "for": "반복문 시작 키워드",
-      "in": "멤버십/반복 연산자",
-      "if": "조건문 시작 키워드",
-      "else": "조건이 거짓일 때 실행되는 블록",
-      "def": "함수 정의 키워드",
-      "class": "클래스 정의 키워드",
-      "try": "예외 처리 블록 시작",
-      "except": "예외 발생 시 실행 블록",
-      "with": "컨텍스트 관리 블록",
-      "as": "별칭 지정 키워드",
-      "return": "함수 결과 반환 키워드",
-      "print": "출력 함수",
-      "range": "연속된 정수 시퀀스 생성 함수",
-      "int": "정수형 변환 함수",
-      "open": "파일 열기 함수",
-      "(": "괄호 시작",
-      ")": "괄호 끝",
-      "[": "리스트 시작",
-      "]": "리스트 끝",
-      "{": "딕셔너리/집합 시작",
-      "}": "딕셔너리/집합 끝",
-      ":": "블록 시작 구분자",
-      "=": "값 할당 연산자",
-      "+": "덧셈 연산자",
-      "**": "제곱 연산자",
-      "i": "변수 (사용자 정의)",
-      "x": "변수 (사용자 정의)",
-      "y": "변수 (사용자 정의)",
-      "a": "변수 (사용자 정의)",
-      "b": "변수 (사용자 정의)",
-      "name": "변수 (사용자 정의)",
-      "'abc'": "문자열 리터럴",
-      "'Hello'": "문자열 리터럴"
-    };
+function escapeHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 
-    // 코드 토큰화
-    function tokenize(code) {
-      const tokens = {};
-      const words = code.replace(/\n/g, " ")
-        .replace(/([\(\)\[\]\{\}\:\=\+\*])/g, " $1 ")
-        .split(/\s+/);
-      words.forEach(word => {
-        if (TOKEN_DICT[word]) {
-          tokens[word] = TOKEN_DICT[word];
-        }
-      });
-      return tokens;
+function simpleHighlight(text){
+  if(!showHighlight.checked) return escapeHtml(text);
+  if(lang === 'JS'){
+    // tiny regex-based highlight (not perfect)
+    return escapeHtml(text)
+      .replace(/(\/\/.*?$)/gm, '<span class="comment">$1</span>')
+      .replace(/('[^']*'|\"[^\"]*\")/g, '<span class="string">$1</span>')
+      .replace(/\b(const|let|var|async|await|function|for|of|return|try|catch|class|new|console)\b/g, '<span class="keyword">$1</span>');
+  } else if(lang === 'PY'){
+    return escapeHtml(text)
+      .replace(/(#.*?$)/gm, '<span class="comment">$1</span>')
+      .replace(/('[^']*'|\"[^\"]*\")/g, '<span class="string">$1</span>')
+      .replace(/\b(def|yield|return|for|in|while|if|else|class|print|import)\b/g, '<span class="keyword">$1</span>');
+  } else if(lang === 'CPP'){
+    return escapeHtml(text)
+      .replace(/(\/\/.*?$)/gm, '<span class="comment">$1</span>')
+      .replace(/("[^"]*"|'[^']*')/g, '<span class="string">$1</span>')
+      .replace(/\b(int|class|return|using|namespace|include|cout|endl)\b/g, '<span class="keyword">$1</span>');
+  }
+  return escapeHtml(text);
+}
+
+function renderTarget(){
+  // build spans per character
+  codeView.innerHTML = '';
+  chars = [];
+  const html = simpleHighlight(target);
+  // html contains tags for spans; we need to break into characters while preserving tags visually.
+  // Simpler: iterate target string and create span per char with classes
+  for(let i=0;i<target.length;i++){
+    const ch = target[i];
+    const sp = document.createElement('span');
+    sp.className = 'char';
+    sp.dataset.index = i;
+    if(ch === '\n'){
+      sp.textContent = '\n';
+      sp.classList.add('codeLine');
+    } else if(ch === ' '){
+      sp.textContent = ' ';
+    } else if(ch === '\t'){
+      sp.textContent = '\t';
+    } else {
+      sp.textContent = ch;
     }
+    codeView.appendChild(sp);
+    chars.push({ch, span: sp, status: 'pending'});
+  }
+  // place initial cursor
+  pos = 0; running = false; updateCursor();
+}
 
-    // 랜덤 정수
-    function randInt(min, max) {
-      return Math.floor(Math.random() * (max - min + 1)) + min;
+function updateCursor(){
+  // remove existing cursor
+  document.querySelectorAll('.cursor').forEach(e=>e.remove());
+  if(pos >= chars.length) return;
+  const sp = chars[pos].span;
+  const cursor = document.createElement('i');
+  cursor.className='cursor';
+  sp.after(cursor);
+}
+
+function start(){
+  if(!target || target.length===0) { alert('지문을 먼저 준비하세요.'); return; }
+  // if custom selected, reload from textarea
+  if(sampleSelect.value==='custom') loadSample('custom');
+  running = true; startTime = Date.now(); mistakes = {}; updateStats();
+  hiddenInput.value=''; hiddenInput.focus();
+  if(timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(updateStats, 500);
+}
+
+function reset(){
+  running=false; if(timerInterval) clearInterval(timerInterval); startTime=null; mistakes={};
+  renderTarget(); updateStats();
+}
+
+function updateStats(){
+  const elapsed = startTime ? Math.floor((Date.now()-startTime)/1000) : 0;
+  timeEl.textContent = elapsed;
+  const typedCount = chars.filter(c=>c.status!=='pending' && c.status!=='pending').length;
+  // compute cpm by number of correct+incorrect typed characters
+  const totalTyped = chars.reduce((acc,c)=> acc + (c.status!=='pending'?1:0),0);
+  const correct = chars.reduce((acc,c)=> acc + (c.status==='ok'?1:0),0);
+  const cpm = elapsed>0 ? Math.round((totalTyped/elapsed)*60) : 0;
+  const acc = totalTyped>0 ? Math.round((correct/totalTyped)*100) : 100;
+  cpmEl.textContent = cpm;
+  accEl.textContent = acc + '%';
+  // mistakes list
+  const list = Object.entries(mistakes).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  mistakesEl.innerHTML = list.map(([k,v])=> `<li>${escapeHtml(k)} : ${v}</li>`).join('') || '<li class="small">없음</li>';
+}
+
+// handle typing
+hiddenInput.addEventListener('keydown', (e)=>{
+  if(!running) start();
+  // custom handling for Tab
+  if(e.key === 'Tab'){
+    e.preventDefault();
+    const tab = '\t';
+    handleChar(tab);
+    return;
+  }
+  if(e.key === 'Backspace'){
+    e.preventDefault();
+    if(pos>0){
+      pos--;
+      chars[pos].status = 'pending';
+      chars[pos].span.classList.remove('ok','err','correct');
+      updateCursor();
     }
+    return;
+  }
+  if(e.key.length === 1){
+    // normal printable character
+    handleChar(e.key);
+    e.preventDefault();
+  }
+});
 
-    // 문제 불러오기
-    function loadSnippets() {
-      const tplObj = GRAMMAR_DATA.templates[Math.floor(Math.random() * GRAMMAR_DATA.templates.length)];
-      const snippet = tplObj.code
-        .replace("{n}", randInt(2, 10))
-        .replace("{x}", randInt(1, 50))
-        .replace("{y}", randInt(1, 50))
-        .replace("{val}", "abc")
-        .replace("{name}", "Alice");
-      const desc = tplObj.desc
-        .replace("{n}", randInt(2, 10))
-        .replace("{x}", randInt(1, 50))
-        .replace("{y}", randInt(1, 50));
-      return { code: snippet.replace(/\\n/g, "\n"), desc: desc, tokens: tokenize(snippet) };
-    }
+function handleChar(inputChar){
+  if(pos >= chars.length) return;
+  let expected = chars[pos].ch;
+  let input = inputChar;
+  // compare tabs and spaces
+  if(expected === '\t' && input === '\t'){
+    chars[pos].status = 'ok';
+    chars[pos].span.classList.add('ok');
+  } else if(expected === '\n' && input === '\r'){
+    // ignore
+    return;
+  } else if(input === expected){
+    chars[pos].status = 'ok';
+    chars[pos].span.classList.add('ok');
+  } else if(input === ' ' && expected === ' '){
+    chars[pos].status = 'ok'; chars[pos].span.classList.add('ok');
+  } else {
+    chars[pos].status = 'err';
+    chars[pos].span.classList.add('err');
+    const key = expected + ' ←/' + input;
+    mistakes[key] = (mistakes[key]||0)+1;
+  }
+  pos++;
+  updateCursor();
+  // if reached end
+  if(pos >= chars.length){
+    running = false; if(timerInterval) clearInterval(timerInterval);
+  }
+  updateStats();
+}
 
-    let targetCode = "";
-    let startTime = 0;
-    let currentDesc = "";
-    let currentTokens = {};
-    let autoNextTimer = null;
+// UI events
+startBtn.addEventListener('click', ()=>{ start(); hiddenInput.focus(); });
+resetBtn.addEventListener('click', ()=>{ reset(); hiddenInput.focus(); });
+sampleSelect.addEventListener('change', ()=>{ loadSample(sampleSelect.value); });
+customText.addEventListener('input', ()=>{ if(sampleSelect.value==='custom') loadSample('custom'); });
+fileInput.addEventListener('change', (e)=>{
+  const f = e.target.files[0];
+  if(!f) return;
+  const reader = new FileReader();
+  reader.onload = function(ev){
+    customText.value = ev.target.result;
+    sampleSelect.value = 'custom';
+    loadSample('custom');
+  };
+  reader.readAsText(f,'utf-8');
+});
+showHighlight.addEventListener('change', ()=>{ renderTarget(); });
 
-    // 새 문제
-    function newPractice() {
-      const snippet = loadSnippets();
-      targetCode = snippet.code;
-      currentDesc = snippet.desc;
-      currentTokens = snippet.tokens;
+// focus behavior: clicking code area focuses hidden input
+codeView.addEventListener('click', ()=>{ hiddenInput.focus(); });
 
-      const targetEl = document.getElementById("target");
-      targetEl.textContent = targetCode;
-      hljs.highlightElement(targetEl);
-
-      document.getElementById("result").innerHTML = "";
-      document.getElementById("input").value = "";
-
-      startTime = Date.now();
-    }
-
-    // 코드 비교 함수 (공백/줄바꿈 무시)
-    function normalizeCode(code) {
-      return code.replace(/\s+/g, " ").trim();
-    }
-
-    // 제출 버튼
-    document.getElementById("check").addEventListener("click", () => {
-      const input = document.getElementById("input").value;
-      const endTime = Date.now();
-      const timeTaken = ((endTime - startTime) / 1000).toFixed(2);
-
-      let resultEl = document.getElementById("result");
-
-      if (normalizeCode(input) === normalizeCode(targetCode)) {
-        let tokenDescHtml = Object.entries(currentTokens)
-          .map(([tok, desc]) => `- ${tok}: ${desc}`)
-          .join("\n");
-
-        resultEl.textContent = 
-`✅ 정답!
-⏱️ 걸린 시간: ${timeTaken}초
-
-📖 설명: ${currentDesc}
-
-🔑 토큰 해설:
-${tokenDescHtml}`;
-
-        // 10초 후 자동 넘어가기
-        if (autoNextTimer) clearTimeout(autoNextTimer);
-        autoNextTimer = setTimeout(() => {
-          newPractice();
-        }, 10000);
-
-        // 엔터 누르면 즉시 다음 문제
-        document.addEventListener("keydown", function handler(e) {
-          if (e.key === "Enter") {
-            e.preventDefault();
-            clearTimeout(autoNextTimer);
-            newPractice();
-            document.removeEventListener("keydown", handler);
-          }
-        });
-
-      } else {
-        resultEl.textContent = `❌ 오타 발생! 다시 시도하세요.`;
-      }
-    });
-
-    // 괄호 자동완성 + 탭 지원
-    const inputBox = document.getElementById("input");
-    inputBox.addEventListener("keydown", function(e) {
-      const start = this.selectionStart;
-      const end = this.selectionEnd;
-
-      // 탭 → 4칸
-      if (e.key === "Tab") {
-        e.preventDefault();
-        this.value = this.value.substring(0, start) + "    " + this.value.substring(end);
-        this.selectionStart = this.selectionEnd = start + 4;
-      }
-
-      // 괄호 자동완성
-      let insertChar = "";
-      if (e.key === "(") insertChar = ")";
-      else if (e.key === "[") insertChar = "]";
-      else if (e.key === "{") insertChar = "}";
-      else if (e.key === "'") insertChar = "'";
-      else if (e.key === '"') insertChar = '"';
-
-      if (insertChar) {
-        e.preventDefault();
-        const value = this.value;
-        this.value = value.slice(0, start) + e.key + insertChar + value.slice(end);
-        this.selectionStart = this.selectionEnd = start + 1;
-      }
-    });
-
-    // 시작
-    newPractice();
-  </script>
-</body>
+// init
+loadSample('sample_js');
+</script></body>
 </html>
