@@ -143,7 +143,7 @@
 
     function newPractice() {
       const snippet = loadSnippets();
-      targetCode = snippet.code;
+      targetCode = snippet.code.replace(/\\n/g, "\n"); // ← 줄바꿈 처리
       currentDesc = snippet.desc;
       currentTokens = snippet.tokens;
 
