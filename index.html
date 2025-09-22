@@ -63,7 +63,7 @@
   <div id="result"></div>
 
   <script>
-    // 연습 예제 데이터
+    // 예제 데이터
     const GRAMMAR_DATA = {
       "templates": [
         { "code": "for i in range({n}):\\n    print(i)", "desc": "{n}번 반복하여 숫자 출력" },
@@ -117,7 +117,7 @@
     // 코드 토큰화
     function tokenize(code) {
       const tokens = {};
-      const words = code.replace(/\n/g, " ")   // ← 실제 줄바꿈 잡기
+      const words = code.replace(/\n/g, " ")
         .replace(/([\(\)\[\]\{\}\:\=\+\*])/g, " $1 ")
         .split(/\s+/);
       words.forEach(word => {
@@ -153,6 +153,7 @@
     let startTime = 0;
     let currentDesc = "";
     let currentTokens = {};
+    let autoNextTimer = null;
 
     // 새 문제
     function newPractice() {
@@ -171,6 +172,11 @@
       startTime = Date.now();
     }
 
+    // 코드 비교 함수 (공백/줄바꿈 무시)
+    function normalizeCode(code) {
+      return code.replace(/\s+/g, " ").trim();
+    }
+
     // 제출 버튼
     document.getElementById("check").addEventListener("click", () => {
       const input = document.getElementById("input").value;
@@ -179,7 +185,7 @@
 
       let resultEl = document.getElementById("result");
 
-      if (input === targetCode) {   // 줄바꿈/공백까지 동일해야 정답
+      if (normalizeCode(input) === normalizeCode(targetCode)) {
         let tokenDescHtml = Object.entries(currentTokens)
           .map(([tok, desc]) => `- ${tok}: ${desc}`)
           .join("\n");
@@ -192,6 +198,23 @@
 
 🔑 토큰 해설:
 ${tokenDescHtml}`;
+
+        // 10초 후 자동 넘어가기
+        if (autoNextTimer) clearTimeout(autoNextTimer);
+        autoNextTimer = setTimeout(() => {
+          newPractice();
+        }, 10000);
+
+        // 엔터 누르면 즉시 다음 문제
+        document.addEventListener("keydown", function handler(e) {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            clearTimeout(autoNextTimer);
+            newPractice();
+            document.removeEventListener("keydown", handler);
+          }
+        });
+
       } else {
         resultEl.textContent = `❌ 오타 발생! 다시 시도하세요.`;
       }
